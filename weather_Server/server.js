@@ -1,0 +1,58 @@
+const express = require('express');
+const https = require('https');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+const API_KEY = '3246b0ce2df8c60f38fb716e7bf3bd4c'; // Replace with your OpenWeatherMap API key
+
+app.get('/weather', (req, res) => {
+    const { lat, lon } = req.query;
+
+    if (!lat || !lon) {
+        return res.status(400).json({ error: 'Please provide latitude and longitude' });
+    }
+
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+
+    https.get(url, (apiRes) => {
+        let data = '';
+
+        apiRes.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        apiRes.on('end', () => {
+            if (apiRes.statusCode === 200) {
+                try {
+                    const weatherData = JSON.parse(data);
+                    res.json(weatherData);
+                } catch (error) {
+                    res.status(500).json({ error: 'Failed to parse weather data' });
+                }
+            } else {
+                res.status(apiRes.statusCode).json({ error: 'Failed to fetch weather data' });
+            }
+        });
+    }).on('error', (error) => {
+        res.status(500).json({ error: 'Failed to fetch weather data' });
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+
+
+
+
+
+
+// const express = require('express');
+// const app = express(); // Call express to create an app instance
+
+// app.get("/api", (req, res) => {
+//     res.json({ "users": ["userOne", "userTwo", "userThree"] });
+// });
+
+// app.listen(5000, () => { console.log("Server starts on port 5000"); });
