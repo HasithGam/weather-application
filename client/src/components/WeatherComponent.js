@@ -1,4 +1,3 @@
-// src/components/WeatherComponent.js
 import React, { useState } from 'react';
 
 const WeatherComponent = () => {
@@ -10,7 +9,7 @@ const WeatherComponent = () => {
 
     const API_KEY = '3246b0ce2df8c60f38fb716e7bf3bd4c';
 
-    const getCoordinates = async () => {
+    const getCoordinates = async (location) => {
         try {
             const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${API_KEY}`);
             if (!response.ok) {
@@ -43,10 +42,14 @@ const WeatherComponent = () => {
     };
 
     const handleLocationChange = (e) => setLocation(e.target.value);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setWeatherData(null);
+        setError('');
+
         try {
-            const { lat, lon } = await getCoordinates();
+            const { lat, lon } = await getCoordinates(location);
             setLat(lat);
             setLon(lon);
             await getWeather(lat, lon);

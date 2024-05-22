@@ -3,14 +3,10 @@ const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const API_KEY = '3246b0ce2df8c60f38fb716e7bf3bd4c'; // Replace with your OpenWeatherMap API key
+const API_KEY = '3246b0ce2df8c60f38fb716e7bf3bd4c';
 
 app.get('/weather', (req, res) => {
     const { lat, lon } = req.query;
-
-    if (!lat || !lon) {
-        return res.status(400).json({ error: 'Please provide latitude and longitude' });
-    }
 
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
 
@@ -41,11 +37,6 @@ app.get('/weather', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-
-
-
-
 
 
 // const express = require('express');
