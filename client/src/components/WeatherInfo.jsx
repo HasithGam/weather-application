@@ -1,53 +1,62 @@
 import React, { useState } from 'react';
+import '../App.css';
 
-function WeatherInfo() {
+const WeatherComponent = () => {
+    const [city, setCity] = useState('');
     const [weatherData, setWeatherData] = useState(null);
-    const [weatherLocation, setWeatherLocation] = useState("");
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchWeatherData = () => {
-        setLoading(true);
-        setError(null);
-        fetch(`/weather?location=${weatherLocation}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    setError(data.error);
-                } else {
-                    setWeatherData(data);
-                }
-                setLoading(false);
-            })
-            .catch(error => {
-                setError("Failed to fetch weather data");
-                setLoading(false);
+    const getWeather = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/weather', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ city }),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch weather data');
+            }
+
+            const data = await response.json();
+            setWeatherData(data);
+            setError(null);
+        } catch (error) {
+            setError(error.message);
+            setWeatherData(null);
+        }
     };
 
     return (
-        <div>
+        <div className="weather-app">
+            <h1>Weather App</h1>
             <input
                 type="text"
-                value={weatherLocation}
-                onChange={(e) => setWeatherLocation(e.target.value)}
-                placeholder="Enter location"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Enter city name"
             />
-            <button onClick={fetchWeatherData}>View</button>
-            {loading && <p>Loading...</p>}
-            {error && <p>{error}</p>}
-            {weatherData && (
-                <div>
-                    <h3>Weather in {weatherData.location}</h3>
-                    <p>Temperature: {weatherData.temperature} °C</p>
-                    <p>Weather: {weatherData.description}</p>
+            <button onClick={getWeather}>Get Weather</button>
+            {error && <p className="error-message">{error}</p>}
+            {weatherData && !error && (
+                <div className="weather-data">
+                    <h2>Weather in {weatherData.name}</h2>
+                    <p><strong>Temperature:</strong> {(weatherData.main.temp - 273.15).toFixed(2)}°C</p>
+                    <p><strong>Weather:</strong> {weatherData.weather[0].description}</p>
+                    <p><strong>Humidity:</strong> {weatherData.main.humidity}%</p>
+                    <p><strong>Wind Speed:</strong> {weatherData.wind.speed} m/s</p>
                 </div>
             )}
         </div>
     );
-}
+};
 
-export default WeatherInfo;
+export default WeatherComponent;
+
+
 
 
 

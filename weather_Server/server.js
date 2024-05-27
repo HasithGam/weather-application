@@ -1,74 +1,51 @@
 const express = require('express');
 const https = require('https');
+const cors = require('cors');
+
 const app = express();
-const PORT = process.env.PORT || 5000;
-const APIKEY = '872e8b2112fb21a4aa23759c8c8240e3';
+const port = 5000;
+const apiKey = '872e8b2112fb21a4aa23759c8c8240e3';
 
-app.get('/weather', (req, res) => {
-    const queryLocation = req.query.location; // Get the location query parameter from the request
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-    if (!queryLocation) {
-        return res.status(400).json({ error: 'Location query parameter is required' });
-    }
+// Function to fetch weather data
+const fetchWeatherData = (city, callback) => {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
 
-    // Step 1: Get latitude and longitude for the location
-    const geocodeUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${queryLocation}&appid=${APIKEY}`;
-
-    https.get(geocodeUrl, (geocodeRes) => {
+    https.get(url, (resp) => {
         let data = '';
 
-        geocodeRes.on('data', (chunk) => {
+        // A chunk of data has been received.
+        resp.on('data', (chunk) => {
             data += chunk;
         });
 
-        geocodeRes.on('end', () => {
-            const geocodeData = JSON.parse(data);
-
-            if (geocodeData.length === 0) {
-                return res.status(404).json({ error: 'Location not found' });
-            }
-
-            const { lat, lon } = geocodeData[0];
-
-            // Step 2: Get weather data using latitude and longitude
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&units=metric&appid=${APIKEY}`;
-
-            https.get(weatherUrl, (weatherRes) => {
-                let weatherData = '';
-
-                weatherRes.on('data', (chunk) => {
-                    weatherData += chunk;
-                });
-
-                weatherRes.on('end', () => {
-                    const weather = JSON.parse(weatherData);
-                    if (weather.current) {
-                        const weatherResponse = {
-                            location: queryLocation,
-                            temperature: weather.current.temp,
-                            description: weather.current.weather[0]?.description || "No description",
-                            // Add more fields if needed
-                        };
-                        res.json(weatherResponse);
-                    } else {
-                        res.status(500).json({ error: 'Failed to fetch weather data' });
-                    }
-                });
-            }).on('error', (err) => {
-                console.error(err);
-                res.status(500).json({ error: 'Failed to fetch weather data' });
-            });
-
+        // The whole response has been received. Process the result.
+        resp.on('end', () => {
+            callback(null, JSON.parse(data));
         });
-    }).on('error', (err) => {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch geocode data' });
-    });
 
+    }).on("error", (err) => {
+        callback(err, null);
+    });
+};
+
+// Endpoint to get weather data
+app.post('/weather', (req, res) => {
+    const city = req.body.city;
+
+    fetchWeatherData(city, (err, data) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(data);
+    });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
 
 
