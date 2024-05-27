@@ -1,9 +1,13 @@
 const express = require('express');
+// const cors = require('cors');
 const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const API_KEY = '3246b0ce2df8c60f38fb716e7bf3bd4c';
+
+
+// app.use(cors());
 
 app.get('/weather', (req, res) => {
     const { lat, lon } = req.query;
@@ -37,13 +41,3 @@ app.get('/weather', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-
-// const express = require('express');
-// const app = express(); // Call express to create an app instance
-
-// app.get("/api", (req, res) => {
-//     res.json({ "users": ["userOne", "userTwo", "userThree"] });
-// });
-
-// app.listen(5000, () => { console.log("Server starts on port 5000"); });

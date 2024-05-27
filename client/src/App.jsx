@@ -14,15 +14,8 @@ function App() {
   // }, [])
 
   return (
-    <div>
+    <div className="App">
       <WeatherComponent />
-      {/* {(typeof backendData.users === 'undefined' ? (
-        <p>Loading ...</p>
-      ) : (
-        backendData.users.map((user, i) => (
-          <p key={i}>{user}</p>
-        ))
-      ))} */}
     </div>
   )
 }

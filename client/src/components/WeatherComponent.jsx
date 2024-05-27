@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import '../tailwind.css'; // Ensure this import is here
 
 const WeatherComponent = () => {
     const [location, setLocation] = useState('');
@@ -28,10 +27,9 @@ const WeatherComponent = () => {
 
     const getWeather = async (lat, lon) => {
         try {
-            const response = await fetch(`/weather?lat=${lat}&lon=${lon}`);
+            const response = await fetch(`http://localhost:5000/weather?lat=${lat}&lon=${lon}`);
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch weather data');
+                throw new Error('Failed to fetch weather data');
             }
             const data = await response.json();
             setWeatherData(data);
@@ -86,9 +84,13 @@ const WeatherComponent = () => {
             {weatherData && (
                 <div className="mt-6 bg-gray-100 p-4 rounded-md">
                     <h2 className="text-xl font-semibold mb-2 text-center">Weather Data</h2>
-                    <p className="text-sm">Temperature: {weatherData.main.temp}K</p>
-                    <p className="text-sm">Weather: {weatherData.weather[0].description}</p>
-                    <p className="text-sm">Location: {weatherData.name}</p>
+                    <p className="text-sm">Temperature: {weatherData.temperature}K</p>
+                    <p className="text-sm">Feels Like: {weatherData.feels_like}K</p>
+                    <p className="text-sm">Weather: {weatherData.weather}</p>
+                    <p className="text-sm">Location: {weatherData.location}</p>
+                    <p className="text-sm">Humidity : {weatherData.humidity} %</p>
+                    <p className="text-sm">Wind Speed : {weatherData.wind_speed} m/s</p>
+                    <p className="text-sm">Pressure : {weatherData.pressure} hPa</p>
                     <p className="text-sm">Latitude: {lat}</p>
                     <p className="text-sm">Longitude: {lon}</p>
                 </div>
