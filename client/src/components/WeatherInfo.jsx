@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
 
 function WeatherInfo() {
-    const [backendData, setBackendData] = useState({});
+    const [weatherData, setWeatherData] = useState(null);
     const [weatherLocation, setWeatherLocation] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const fetchWeatherData = () => {
         setLoading(true);
-        fetch(`/weather?location=${weatherLocation}`) // Updated endpoint to match server route
+        setError(null);
+        fetch(`/weather?location=${weatherLocation}`)
             .then(response => response.json())
             .then(data => {
-                setBackendData(data);
+                if (data.error) {
+                    setError(data.error);
+                } else {
+                    setWeatherData(data);
+                }
                 setLoading(false);
             })
             .catch(error => {
-                console.error('Error fetching data:', error);
+                setError("Failed to fetch weather data");
                 setLoading(false);
             });
     };
@@ -25,26 +31,25 @@ function WeatherInfo() {
                 type="text"
                 value={weatherLocation}
                 onChange={(e) => setWeatherLocation(e.target.value)}
+                placeholder="Enter location"
             />
             <button onClick={fetchWeatherData}>View</button>
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                backendData.current ? (
-                    <div>
-                        <h2>{backendData.timezone}</h2>
-                        <p>Temperature: {backendData.current.temp}°C</p>
-                        <p>Weather: {backendData.current.weather[0].description}</p>
-                    </div>
-                ) : (
-                    <p>No data available</p>
-                )
+            {loading && <p>Loading...</p>}
+            {error && <p>{error}</p>}
+            {weatherData && (
+                <div>
+                    <h3>Weather in {weatherData.location}</h3>
+                    <p>Temperature: {weatherData.temperature} °C</p>
+                    <p>Weather: {weatherData.description}</p>
+                </div>
             )}
         </div>
     );
 }
 
 export default WeatherInfo;
+
+
 
 
 // import React, { useEffect, useState } from 'react';

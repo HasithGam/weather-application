@@ -1,59 +1,76 @@
 const express = require('express');
-const http = require('http');
+const https = require('https');
 const app = express();
 const PORT = process.env.PORT || 5000;
-const APIKEY = '3246b0ce2df8c60f38fb716e7bf3bd4c';
+const APIKEY = '872e8b2112fb21a4aa23759c8c8240e3';
 
-// Function to make HTTP GET request
-function makeRequest(url) {
-    return new Promise((resolve, reject) => {
-        http.get(url, (response) => {
-            let data = '';
-            response.on('data', (chunk) => {
-                data += chunk;
-            });
-            response.on('end', () => {
-                resolve(JSON.parse(data));
-            });
-        }).on('error', (error) => {
-            reject(error);
-        });
-    });
-}
-
-// Route to get weather data based on location name
-app.get('/weather', async (req, res) => {
-    const queryLocation = req.query.location;
+app.get('/weather', (req, res) => {
+    const queryLocation = req.query.location; // Get the location query parameter from the request
 
     if (!queryLocation) {
         return res.status(400).json({ error: 'Location query parameter is required' });
     }
 
-    try {
-        // Step 1: Get the latitude and longitude using the Geocoding API
-        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${queryLocation}&limit=1&appid=${APIKEY}`;
-        const geoResponse = await makeRequest(geoUrl);
-        if (geoResponse.length === 0) {
-            return res.status(404).json({ error: 'Location not found' });
-        }
-        const { lat, lon } = geoResponse[0];
+    // Step 1: Get latitude and longitude for the location
+    const geocodeUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${queryLocation}&appid=${APIKEY}`;
 
-        // Step 2: Get the weather data using the One Call API
-        const weatherUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&appid=${APIKEY}`;
-        const weatherResponse = await makeRequest(weatherUrl);
-        const weatherData = weatherResponse;
+    https.get(geocodeUrl, (geocodeRes) => {
+        let data = '';
 
-        // Send the weather data as the response
-        res.json(weatherData);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'An error occurred while fetching weather data' });
-    }
+        geocodeRes.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        geocodeRes.on('end', () => {
+            const geocodeData = JSON.parse(data);
+
+            if (geocodeData.length === 0) {
+                return res.status(404).json({ error: 'Location not found' });
+            }
+
+            const { lat, lon } = geocodeData[0];
+
+            // Step 2: Get weather data using latitude and longitude
+            const weatherUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&units=metric&appid=${APIKEY}`;
+
+            https.get(weatherUrl, (weatherRes) => {
+                let weatherData = '';
+
+                weatherRes.on('data', (chunk) => {
+                    weatherData += chunk;
+                });
+
+                weatherRes.on('end', () => {
+                    const weather = JSON.parse(weatherData);
+                    if (weather.current) {
+                        const weatherResponse = {
+                            location: queryLocation,
+                            temperature: weather.current.temp,
+                            description: weather.current.weather[0]?.description || "No description",
+                            // Add more fields if needed
+                        };
+                        res.json(weatherResponse);
+                    } else {
+                        res.status(500).json({ error: 'Failed to fetch weather data' });
+                    }
+                });
+            }).on('error', (err) => {
+                console.error(err);
+                res.status(500).json({ error: 'Failed to fetch weather data' });
+            });
+
+        });
+    }).on('error', (err) => {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch geocode data' });
+    });
+
 });
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
 
 
 
