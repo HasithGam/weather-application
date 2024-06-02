@@ -50,6 +50,7 @@ const WeatherComponent = () => {
                     <p><strong>Wind Speed:</strong> {weatherData.wind.speed} m/s</p>
                 </div>
             )}
+            
         </div>
     );
 };

@@ -17,9 +17,10 @@ const fetchWeatherData = (city, callback) => {
     https.get(url, (resp) => {
         let data = '';
 
-        // A chunk of data has been received.
-        resp.on('data', (chunk) => {
-            data += chunk;
+        // A weather data has been received.
+        resp.on('data', (weatherDataArray) => {
+            data += weatherDataArray;
+            console.log(weatherDataArray);
         });
 
         // The whole response has been received. Process the result.
